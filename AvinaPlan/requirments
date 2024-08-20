@@ -5,3 +5,7 @@ psycopg2
 Pillow
 persian
 Pyjwt
+requests
+python-dotenv
+django-otp==0.3.14
+django-otp-yubikey

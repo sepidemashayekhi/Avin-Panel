@@ -1,6 +1,6 @@
 from django.utils.deprecation import MiddlewareMixin
 from rest_framework.exceptions import PermissionDenied
-from django.urls import resolve
+from django.http import HttpResponse
 import jwt
 from Users.models import User, UserAccess
 JWT_SECRET = 'secret'
@@ -16,7 +16,7 @@ def get_licensed_menus(user_id, current_route):
 
 class CustomMiddleware(MiddlewareMixin):
     def process_request(self, request):
-        without_licens = ['/user/create/']
+        without_licens = ['/user/create/', '/user/login/', '/user/recoverpass/', '/user/newpass/']
         current_route = request.path_info
 
         auth_header = request.headers.get('Authorization')
@@ -27,8 +27,8 @@ class CustomMiddleware(MiddlewareMixin):
                 decode = jwt.decode(token_key, algorithms='HS512', key=JWT_SECRET)
                 licens = get_licensed_menus(decode['user_id'], current_route)
                 if not licens:
-                    raise PermissionDenied('not access')
+                    return HttpResponse('not access', status=401)
             else:
-                raise PermissionDenied('not access')
+                return HttpResponse('not access', status=401)
 
 
