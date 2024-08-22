@@ -26,6 +26,9 @@ error_list = {
     216: persian.convert_ar_characters('کاربر با این کد ملی قبلا ثبت نام کرده است'),
     217: persian.convert_ar_characters('کاربر ایجاد و در انتطار تایید مدیر می باشد'),
     218: persian.convert_ar_characters('کد ملی یا رمز عبور اشتباه می باشد'),
-    219: persian.convert_ar_characters('ارسال پیامک با خطا مواجه شد لطفا مجددا تلاش کنید')
+    219: persian.convert_ar_characters('ارسال پیامک با خطا مواجه شد لطفا مجددا تلاش کنید'),
+    220: persian.convert_ar_characters('کد اعتبارسنجی معتبر نیست '),
+    221: persian.convert_ar_characters('کاربر غیر فعال با این شناسه وجود ندارد'),
+    222: persian.convert_ar_characters('ارسال لینک به کابر با خطا مواجه شد')
 
 }

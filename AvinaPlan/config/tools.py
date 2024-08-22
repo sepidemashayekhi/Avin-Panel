@@ -1,4 +1,17 @@
+
+import os
+from dotenv import load_dotenv
+import requests
+
+from django_otp.oath import TOTP
 from .error_list import error_list
+
+load_dotenv()
+
+PHONNUMBER = os.getenv('PhoneNumber')
+ACCESSHASH = os.getenv('AccessHash')
+PATTERNID = os.getenv('PatternId')
+URL = os.getenv('URL')
 
 def to_roman_numeral(value):
     roman_map = {
@@ -30,3 +43,28 @@ def message_error(status, code, error_code=None, data=None):
         'code': code
     }
     return result
+
+def send_sms(self, message, phone_number):
+    params = {
+        'AccessHash': ACCESSHASH,
+        'PhoneNumber': PHONNUMBER,
+        'PatternId': PATTERNID,
+        'RecNumber': phone_number,
+        'Smsclass': 1,
+        'token1': message
+    }
+    try:
+        response = requests.get(url=URL, params=params)
+    except:
+        return 500
+    return response.status_code
+
+
+ExTime = 120
+
+def create_otp(self, user, model):
+    device = model.objects.create(user=user, step=self.ExTime)
+    device.save()
+    totp = TOTP(key=device.bin_key, step=self.ExTime)
+    token = totp.token()
+    return token, device

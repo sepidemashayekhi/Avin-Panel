@@ -6,8 +6,6 @@ class CreateUserSerializer(serializers.Serializer):
     NationalCode = serializers.CharField(required=True)
     Password = serializers.CharField(required=True)
 
-
-
 class LoginUserSerializer(serializers.Serializer):
     NationalCode = serializers.CharField(required=True)
     Password = serializers.CharField(required=True)
@@ -28,3 +26,9 @@ class SetPassSerializer(serializers.Serializer):
     Key = serializers.CharField(max_length=90, required=True, allow_blank=False, allow_null=False)
     Password = serializers.CharField(max_length=50, required=True, allow_null=False, allow_blank=False)
     Otp = serializers.IntegerField(required=True)
+
+class ActivateUserSerializer(serializers.Serializer):
+    UserId = serializers.CharField(max_length=50, required=True, allow_blank=False, allow_null=False)
+
+class PassUserSerializer(serializers.Serializer):
+    Password = serializers.CharField(max_length=50, required=True, allow_null=False, allow_blank=False)

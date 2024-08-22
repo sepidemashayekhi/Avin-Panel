@@ -2,50 +2,22 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from django_otp.oath import TOTP
+from Users.models import User, MyTOTPDevice, PassDevice
+from Users.serializers import CreateUserSerializer, LoginUserSerializer, RecoverPassSerializer, SetPassSerializer, ActivateUserSerializer, PassUserSerializer
+from config import message_error, create_otp, send_sms
 
-from Users.models import User, MyTOTPDevice
-from Users.serializers import CreateUserSerializer, LoginUserSerializer, RecoverPassSerializer, SetPassSerializer
-from config import message_error
 
 import jwt
 from datetime import timedelta, datetime, timezone
-import requests
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
 
-PHONNUMBER = os.getenv('PhoneNumber')
-ACCESSHASH = os.getenv('AccessHash')
-PATTERNID = os.getenv('PatternId')
-URL = os.getenv('URL')
+PATH = os.getenv('PATH')
 
 TOKRNEXP = datetime.now(timezone.utc) + timedelta(hours=5)
 
 class UserPortal(viewsets.ViewSet):
-    ExTime = 120
-    def _send_sms(self, message, phone_number):
-        params = {
-            'AccessHash': ACCESSHASH,
-            'PhoneNumber': PHONNUMBER,
-            'PatternId': PATTERNID,
-            'RecNumber': phone_number,
-            'Smsclass': 1,
-            'token1': message
-        }
-        try:
-            response = requests.get(url=URL, params=params)
-        except:
-            return 500
-        return response.status_code
-
-    def _create_otp(self, user):
-        device = MyTOTPDevice.objects.create(user=user, step=self.ExTime)
-        device.save()
-        totp = TOTP(key=device.bin_key, step=self.ExTime)
-        token = totp.token()
-        return token, device
 
     @action(methods=['post'], detail=False, url_path='create')
     def create_user(self, request):
@@ -59,10 +31,6 @@ class UserPortal(viewsets.ViewSet):
             return Response(message_error(False, 400, error_code=216), status=status.HTTP_400_BAD_REQUEST)
 
         return Response(message_error(True, 200, error_code=217), status.HTTP_200_OK)
-
-    @action(methods=['put'], detail=False, url_path='activete')
-    def activate_user(self, request):
-        pass
 
     @action(methods=['post'], detail=False, url_path='login')
     def login_user(self, request):
@@ -94,8 +62,8 @@ class UserPortal(viewsets.ViewSet):
         if not user:
             return Response(message_error(False, 400, error_code=209), status.HTTP_400_BAD_REQUEST)
 
-        otp, device = self._create_otp(user)
-        response = self._send_sms(otp, data['PhoneNumber'])
+        otp, device = create_otp(user, MyTOTPDevice)
+        response = send_sms(otp, data['PhoneNumber'])
 
         if response != 200:
             return Response(message_error(False, 400, error_code=219), status.HTTP_400_BAD_REQUEST)
@@ -111,5 +79,55 @@ class UserPortal(viewsets.ViewSet):
 
         device = MyTOTPDevice.objects.filter(key=data['Key']).first()
         if not device:
-            pass
+            return Response(message_error(True, 400, error_code=208), status.HTTP_400_BAD_REQUEST)
+        verify = device.verify_token(data['Otp'])
+
+        if not verify:
+            return Response(message_error(False, 400, error_code=220), status.HTTP_400_BAD_REQUEST)
+        user = device.user
+        User.objects.chenge_pass(user, data['Password'])
+
+        return Response(message_error(True, 200, error_code=200), status.HTTP_200_OK)
+
+    @action(methods=['put'], detail=False, url_path='setpass/(?P<key>[^/.]+)')
+    def set_pass(self, request, key):
+        data = request.data
+        serializer = PassUserSerializer(data=data)
+        if not isinstance(key, str):
+            return Response(message_error(False, 400, error_code=208), status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response(message_error(False, 400, error_code=208), status.HTTP_400_BAD_REQUEST)
+
+        device = PassDevice.objects.filter(key=key).first()
+        user = device.user
+        user.Password = data['Password']
+        user.save()
+        return Response(message_error(True, 200, error_code=200), status.HTTP_200_OK)
+
+
+class AdminPortal(viewsets.ViewSet):
+
+    @action(methods=['put'], detail=False, url_path='activate')
+    def activate_user(self, request):
+        data = request.data
+        serializer = ActivateUserSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(message_error(False, 400, error_code=208), status.HTTP_400_BAD_REQUEST)
+        user = User.objects.activate_user(data['UserId'])
+        if not user:
+            return Response(message_error(False, 400, error_code=221), status.HTTP_400_BAD_REQUEST)
+
+        device = PassDevice.objects.create(user=user)
+        device.save()
+        path = os.path.join(PATH, 'user', 'setpass', device.key)
+        response = send_sms(path, user.PhoneNumber)
+        if response != 200:
+            return Response(message_error(False, 400, error_code=222), status.HTTP_400_BAD_REQUEST)
+        return Response(message_error(True, 200, error_code=200), status.HTTP_200_OK)
+
+
+
+
+
+
 

@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
 
-from config.tools import to_roman_numeral
+from config import to_roman_numeral
 
 from django_otp.plugins.otp_totp.models import key_validator, default_key
 from django_otp.oath import TOTP
@@ -21,12 +21,26 @@ class User(models.Model):
             return user
 
         def check_user_pass(self, NationalCode, Password):
-            user = self.filter(NationalCode=NationalCode,Active=True).first()
+            user = self.filter(NationalCode=NationalCode, Active=True).first()
             if not user:
                 return False
-            if not check_password(password=Password,encoded=user.Password):
+            if not check_password(password=Password, encoded=user.Password):
                 return False
             return user
+
+        def chenge_pass(self, user, Password):
+            user.Password = make_password(password=Password)
+            user.save()
+
+        def activate_user(self, UserId):
+            user = self.filter(UserId=UserId, Active=False).first()
+            if not user:
+                return False
+            user.Active = True
+            user.save()
+            return user
+
+
 
 
     UserId = models.CharField(max_length=50, unique=True, editable=False)
@@ -127,3 +141,12 @@ class MyTOTPDevice(models.Model):
             self.save()
         return verified
 
+
+class PassDevice(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    key = models.CharField(
+        max_length=80,
+        validators=[key_validator],
+        default=default_key,
+        help_text="A hex-encoded secret key of up to 40 bytes.",
+    )
