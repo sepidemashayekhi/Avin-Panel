@@ -13,11 +13,11 @@ class User(models.Model):
 
     class UserManager(models.Manager):
 
-        def create_user(self, NationalCode, Password):
+        def create_user(self, NationalCode, PhoneNumber, FullName):
             if self.filter(NationalCode=NationalCode).first():
                return False
-            hashed_pwd = make_password(password=Password)
-            user = self.model(NationalCode=NationalCode, Password=hashed_pwd, Active=False)
+            user = self.model(NationalCode=NationalCode, FullName=FullName, PhoneNumber=PhoneNumber, Active=False)
+            user.save()
             return user
 
         def check_user_pass(self, NationalCode, Password):
@@ -41,13 +41,11 @@ class User(models.Model):
             return user
 
 
-
-
     UserId = models.CharField(max_length=50, unique=True, editable=False)
     FullName = models.CharField(max_length=150, null=True, blank=True)
-    NationalCode = models.CharField(max_length=15, null=False, blank=False, unique=True)
-    PhoneNumber = models.CharField(max_length=15, null=True)
-    Password = models.CharField(max_length=50, null=False, blank=False, default=None)
+    NationalCode = models.CharField(max_length=20, null=False, blank=False, unique=True)
+    PhoneNumber = models.CharField(max_length=20, null=True)
+    Password = models.CharField(max_length=150, null=True, blank=False)
     Active = models.BooleanField(default=False)
     CreatedAt = models.DateTimeField(null=True)
     UpdateAt = models.DateTimeField(null=True)

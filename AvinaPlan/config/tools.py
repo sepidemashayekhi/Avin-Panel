@@ -44,7 +44,7 @@ def message_error(status, code, error_code=None, data=None):
     }
     return result
 
-def send_sms(self, message, phone_number):
+def send_sms(message, phone_number):
     params = {
         'AccessHash': ACCESSHASH,
         'PhoneNumber': PHONNUMBER,
@@ -62,9 +62,9 @@ def send_sms(self, message, phone_number):
 
 ExTime = 120
 
-def create_otp(self, user, model):
-    device = model.objects.create(user=user, step=self.ExTime)
+def create_otp(user, model):
+    device = model.objects.create(user=user, step=ExTime)
     device.save()
-    totp = TOTP(key=device.bin_key, step=self.ExTime)
+    totp = TOTP(key=device.bin_key, step=ExTime)
     token = totp.token()
     return token, device

@@ -8,7 +8,7 @@ error_list = {
     103: persian.convert_ar_characters('این جدول در دیتا بیس وجود ندارد'),
     104: persian.convert_ar_characters('اعملیات با خطا مواجه شد'),
 
-    201: persian.convert_ar_characters('کاربر با این شماره وجود ندارد'),
+    201: persian.convert_ar_characters('کاربر با شناسه وجود ندارد'),
     202: persian.convert_ar_characters('ایمیل یا رمز عبور اشتباه می باشد'),
     203: persian.convert_ar_characters('فایل با این آیدی وجود ندارد '),
     204: persian.convert_ar_characters('فایل در انتظار تایید وجود ندارد'),
@@ -29,6 +29,6 @@ error_list = {
     219: persian.convert_ar_characters('ارسال پیامک با خطا مواجه شد لطفا مجددا تلاش کنید'),
     220: persian.convert_ar_characters('کد اعتبارسنجی معتبر نیست '),
     221: persian.convert_ar_characters('کاربر غیر فعال با این شناسه وجود ندارد'),
-    222: persian.convert_ar_characters('ارسال لینک به کابر با خطا مواجه شد')
+    222: persian.convert_ar_characters('ارسال لینک به کابر با خطا مواجه شد'),
 
 }
