@@ -67,11 +67,30 @@ class Flag(models.Model):
     Priority = models.IntegerField(null=False)
 
 class Menu(models.Model):
+    MenuId = models.CharField(max_length=50, unique=True, editable=False, default=None)
     Title = models.CharField(max_length=80)
     FlagId = models.ForeignKey(Flag, on_delete=models.SET_NULL, null=True)
 
+    def save(self, *args, **kwargs):
+        if not self.MenuId:
+            last_id = Menu.objects.all().aggregate(largest=models.Max('id'))['largest']
+            next_id = 1 if last_id is None else last_id + 1
+            self.MenuId = to_roman_numeral(next_id)
+        super(Menu, self).save(*args, **kwargs)
+
+
 class Access(models.Model):
+    AccessId = models.CharField(max_length=50, unique=True, editable=False, default=None)
     Title = models.CharField(max_length=50)
+
+    def save(self, *args, **kwargs):
+        if not self.AccessId:
+            last_id = Access.objects.all().aggregate(largest=models.Max('id'))['largest']
+            next_id = 1 if last_id is None else last_id + 1
+            self.AccessId = to_roman_numeral(next_id)
+        super(Access, self).save(*args, **kwargs)
+
+
 
 class UserAccess(models.Model):
     MenuId = models.ForeignKey(Menu, on_delete=models.CASCADE)
@@ -81,7 +100,7 @@ class UserAccess(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.UrlPath:
-            self.UrlPath = f'/{self.MenuId.Title}/{self.AccessId.Title}'
+            self.UrlPath = f'/{self.MenuId.Title}/{self.AccessId.Title}/'
         super(UserAccess, self).save(*args, **kwargs)
 
 class MyTOTPDevice(models.Model):

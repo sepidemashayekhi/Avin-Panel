@@ -44,7 +44,10 @@ class CustomMiddleware(MiddlewareMixin):
         if current_route_name not in WITHOUTLICENS:
             if auth_header and auth_header.startswith('Bearer '):
                 token_key = auth_header.split(' ')[1]
-                decode = jwt.decode(token_key, algorithms='HS256', key=JWT_SECRET)
+                try:
+                    decode = jwt.decode(token_key, algorithms='HS256', key=JWT_SECRET)
+                except:
+                    return HttpResponse('not access', status=401)
                 licens = get_licensed_menus(request ,decode['UserId'], current_route)
                 if not licens:
                     return HttpResponse('not access', status=401)

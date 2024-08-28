@@ -2,6 +2,9 @@
 import os
 from dotenv import load_dotenv
 import requests
+import string
+import random
+
 
 from django_otp.oath import TOTP
 from .error_list import error_list
@@ -68,3 +71,14 @@ def create_otp(user, model):
     totp = TOTP(key=device.bin_key, step=ExTime)
     token = totp.token()
     return token, device
+
+
+
+
+
+def generate_password(length=12, include_special_chars=True):
+    characters = string.ascii_letters + string.digits
+    if include_special_chars:
+        characters += string.punctuation
+    password = ''.join(random.choice(characters) for _ in range(length))
+    return password

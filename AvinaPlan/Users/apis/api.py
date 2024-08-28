@@ -5,11 +5,11 @@ from rest_framework.response import Response
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 
-from Users.models import User, MyTOTPDevice, PassDevice
+from Users.models import User, MyTOTPDevice, PassDevice, Menu
 from Users.serializers import (CreateUserSerializer, LoginUserSerializer, RecoverPassSerializer, SetPassSerializer, ActivateUserSerializer, PassUserSerializer,
-                               UserDetailSerializer, UserWriteDetailSerializer, UserDelete
+                               UserDetailSerializer, UserWriteDetailSerializer, UserDelete, MenuSerializer
                                )
-from config import message_error, create_otp, send_sms
+from config import message_error, create_otp, send_sms, generate_password
 
 
 import jwt
@@ -134,39 +134,6 @@ class UserView(viewsets.ViewSet):
 
         return Response(message_error(True, 200, error_code=200), status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        method='put',
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'Password': openapi.Schema(type=openapi.TYPE_STRING)
-            },
-            required=['Password']
-        ),
-        manual_parameters=[
-            openapi.Parameter(
-                'Key', openapi.IN_PATH, description="Device Key", type=openapi.TYPE_STRING
-            )
-        ]
-    )
-    @action(methods=['put'], detail=False, url_path='setpass/(?P<Key>[^/.]+)')
-    def set_pass(self, request, Key):
-        data = request.data
-        serializer = PassUserSerializer(data=data)
-        if not isinstance(Key, str):
-            return Response(message_error(False, 400, error_code=208), status.HTTP_400_BAD_REQUEST)
-        if not serializer.is_valid():
-            return Response(message_error(False, 400, error_code=208), status.HTTP_400_BAD_REQUEST)
-
-        device = PassDevice.objects.filter(key=Key).first()
-        if not device:
-            return Response(message_error(False, 400, error_code=208), status.HTTP_400_BAD_REQUEST)
-        user = device.user
-        user.Password = make_password(data['Password'])
-        user.save()
-        device.delete()
-        return Response(message_error(True, 200, error_code=200), status.HTTP_200_OK)
-
 
 class AdminPortal(viewsets.ViewSet):
 
@@ -193,14 +160,13 @@ class AdminPortal(viewsets.ViewSet):
         user = User.objects.activate_user(data['UserId'])
         if not user:
             return Response(message_error(False, 400, error_code=221), status.HTTP_400_BAD_REQUEST)
+        password = generate_password(length=6, include_special_chars=False)
 
-        device = PassDevice.objects.create(user=user)
-        device.save()
-        path = f"{PATH}/{reverse('user-set-pass', kwargs={'Key': device.key})}"
-        print(path)
-        response = send_sms(path, user.PhoneNumber)
+        user.Password = password
+        response = send_sms(password, user.PhoneNumber)
         if response != 200:
             return Response(message_error(False, 400, error_code=222), status.HTTP_400_BAD_REQUEST)
+        user.save()
         return Response(message_error(True, 202, error_code=200), status.HTTP_202_ACCEPTED)
 
 
@@ -278,6 +244,11 @@ class AdminPortal(viewsets.ViewSet):
 
 
 
+    @action(methods=['get'], detail=False, url_path='menu/read')
+    def menu_read(self, request):
+        menu = Menu.objects.all().order_by('-id')
+        serializer = MenuSerializer(menu, many=True)
+        return Response(message_error(True, 200, data=serializer.data), status.HTTP_200_OK)
 
 
 

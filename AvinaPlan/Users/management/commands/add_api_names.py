@@ -9,6 +9,9 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         api_names = [
             "portal/passiveuser",
+            "portal/user",
+            "portal/menu",
+            "access",
         ]
 
         for name in api_names:

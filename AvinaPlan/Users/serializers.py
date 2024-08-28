@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.core import validators
-from Users.models import User
+from Users.models import User, Menu, Flag, UserAccess, Access
 
 
 class CreateUserSerializer(serializers.Serializer):
@@ -60,3 +60,54 @@ class UserWriteDetailSerializer(serializers.Serializer):
 
 class UserDelete(serializers.Serializer):
     UserId = serializers.CharField(max_length=50, required=True, allow_blank=False, allow_null=False)
+
+class FlagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Flag
+        fields = ['Title', 'Priority']
+
+class MenuSerializer(serializers.ModelSerializer):
+
+    FlagId = FlagSerializer()
+    class Meta:
+        model = Menu
+        fields = '__all__'
+
+class UserAccessSerializer(serializers.Serializer):
+    UserId = serializers.CharField()  # Assuming the custom field is a CharField
+    MenuId = serializers.CharField()
+    AccessId = serializers.CharField()
+
+    class Meta:
+        model = UserAccess
+        fields = ['UserId', 'MenuId', 'AccessId']
+
+    def to_internal_value(self, data):
+        internal_data = super().to_internal_value(data)
+
+        try:
+            user = User.objects.get(UserId=internal_data['UserId'])
+            menu = Menu.objects.get(MenuId=internal_data['MenuId'])
+            access = Access.objects.get(AccessId=internal_data['AccessId'])
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"UserId": "User not found"})
+        except Menu.DoesNotExist:
+            raise serializers.ValidationError({"MenuId": "Menu not found"})
+        except Access.DoesNotExist:
+            raise serializers.ValidationError({"AccessId": "Access not found"})
+
+        internal_data['UserId'] = user
+        internal_data['MenuId'] = menu
+        internal_data['AccessId'] = access
+
+        return internal_data
+
+    def create(self, validated_data):
+        # for item in validated_data:
+        user_access = UserAccess.objects.create(
+            UserId=validated_data['UserId'],
+            MenuId=validated_data['MenuId'],
+            AccessId=validated_data['AccessId'],
+        )
+        return user_access
+
