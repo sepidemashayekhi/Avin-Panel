@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_otp',
     'Users',
+    'Products'
 ]
 
 MIDDLEWARE = [
