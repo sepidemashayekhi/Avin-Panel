@@ -12,7 +12,8 @@ class Command(BaseCommand):
             "portal/user",
             "portal/menu",
             "access",
-            "setting"
+            "setting",
+            "product"
         ]
 
         for name in api_names:
