@@ -47,13 +47,23 @@ class ProductViewSet(ViewSet):
         serializer = ProductReadSerializer(products, many=True)
         return Response(message_error(True, 200, data=serializer.data), status.HTTP_200_OK)
 
-
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('ProductId',openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True)
+        ]
+    )
+    @action(methods=['delete'], detail=False, url_path='delete')
     def delete_product(self, request):
         data = request.GET.dict()
-        if not data.get('ProductId') or isinstance(data['ProductId'], str):
+        if not data.get('ProductId') or not isinstance(data['ProductId'], str):
             return Response(message_error(False, 400, error_code=208), status.HTTP_400_BAD_REQUEST)
         product = Products.objects.filter(ProductId=data.get('ProductId')).first()
-        if not Products
+        if not Products:
+            return Response(message_error(False, 400, error_code=225), status.HTTP_400_BAD_REQUEST)
+        product.delete()
+        return Response(message_error(True, 204, error_code=200), status.HTTP_204_NO_CONTENT)
+
+
 
 
 

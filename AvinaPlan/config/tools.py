@@ -1,4 +1,6 @@
 
+from rest_framework.pagination import PageNumberPagination
+
 import os
 from dotenv import load_dotenv
 import requests
@@ -39,7 +41,7 @@ def to_roman_numeral(value):
 
 
 def message_error(status, code, error_code=None, data=None):
-    data = data if data else error_list[error_code]
+    data = data if data or isinstance(data, list|tuple) else error_list[error_code]
     result = {
         'data': data,
         'status': status,
@@ -82,3 +84,10 @@ def generate_password(length=12, include_special_chars=True):
         characters += string.punctuation
     password = ''.join(random.choice(characters) for _ in range(length))
     return password
+
+class MyPaginationModel(PageNumberPagination):
+
+    page_size = 10
+    page_query_param = 'Page'
+    page_size_query_param = 'page_size'
+    max_page_size = 100

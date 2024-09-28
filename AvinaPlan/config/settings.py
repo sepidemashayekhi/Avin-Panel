@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-zbfl04!r9)*)y$ck_+p(@kd9&hsnk7=mcarw)ab_*7knkpe+74
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -52,7 +52,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'config.middleware.CustomMiddleware',
+    # 'config.middleware.RemoveSlashMiddleware',
+    'config.middleware.CustomMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -99,6 +100,10 @@ DATABASES = {
     }
 }
 
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000'
+]
+
 
 
 # Password validation
@@ -141,3 +146,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+APPEND_SLASH = True

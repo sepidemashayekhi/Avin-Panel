@@ -111,3 +111,8 @@ class UserAccessSerializer(serializers.Serializer):
         )
         return user_access
 
+
+
+class CheckTokenSerializer(serializers.Serializer):
+
+    Token = serializers.CharField(max_length=250, required=True, allow_null=False, allow_blank=False)

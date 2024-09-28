@@ -41,3 +41,19 @@ class ProductReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = ['ProductId','Title', 'CategoryId', 'Price', 'Quantity']
+
+class CreateCategorySerializer(serializers.Serializer):
+    Title = serializers.CharField(max_length=50, allow_null=False, allow_blank=False, required=True)
+    ParentId = serializers.CharField(max_length=50, required=False, allow_null=True)
+
+class CategoryReadSerializer(serializers.ModelSerializer):
+    Children = serializers.SerializerMethodField()
+    class Meta:
+        model = Category
+        fields = ['CategoryId', 'Title', 'Children']
+
+    def get_Children(self, obj):
+        parent_id = Category.objects.filter(CategoryId=obj.CategoryId).first()
+        children = Category.objects.filter(ParentId=parent_id.id)
+        return CategoryReadSerializer(children, many=True).data
+

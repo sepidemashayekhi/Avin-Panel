@@ -1,3 +1,4 @@
+import requests
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -7,7 +8,7 @@ from django.contrib.auth.hashers import make_password
 
 from Users.models import User, MyTOTPDevice, PassDevice, Menu
 from Users.serializers import (CreateUserSerializer, LoginUserSerializer, RecoverPassSerializer, SetPassSerializer, ActivateUserSerializer, PassUserSerializer,
-                               UserDetailSerializer, UserWriteDetailSerializer, UserDelete, MenuSerializer
+                               UserDetailSerializer, UserWriteDetailSerializer, UserDelete, MenuSerializer, CheckTokenSerializer
                                )
 from config import message_error, create_otp, send_sms, generate_password
 
@@ -19,10 +20,18 @@ from dotenv import load_dotenv
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+import urllib.parse
+import json
+import webbrowser
+import requests
+
+
 load_dotenv()
 
 # PATH = 'http://127.0.0.1:8000'
 PATH = 'https://avina.liara.run'
+
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 TOKRNEXP = datetime.now(timezone.utc) + timedelta(hours=5)
 
@@ -73,7 +82,7 @@ class UserView(viewsets.ViewSet):
 
         token = jwt.encode({'NationalCode': user.NationalCode,
                             'UserId': user.UserId,
-                            'exp': TOKRNEXP }, "secret", algorithm="HS256")
+                            'exp': TOKRNEXP }, SECRET_KEY, algorithm="HS256")
 
         return Response(message_error(True, 200, data=token), status.HTTP_200_OK)
 
@@ -120,7 +129,7 @@ class UserView(viewsets.ViewSet):
         data = request.data
         serializer = SetPassSerializer(data=data)
         if not serializer.is_valid():
-            return Response(message_error(False, 400, error_code=208))
+            return Response(message_error(False, 400, error_code=208), status.HTTP_400_BAD_REQUEST)
 
         device = MyTOTPDevice.objects.filter(key=data['Key']).first()
         if not device:
@@ -163,10 +172,10 @@ class AdminPortal(viewsets.ViewSet):
         password = generate_password(length=6, include_special_chars=False)
 
         user.Password = password
+        user.save()
         response = send_sms(password, user.PhoneNumber)
         if response != 200:
             return Response(message_error(False, 400, error_code=222), status.HTTP_400_BAD_REQUEST)
-        user.save()
         return Response(message_error(True, 202, error_code=200), status.HTTP_202_ACCEPTED)
 
 
@@ -249,6 +258,68 @@ class AdminPortal(viewsets.ViewSet):
         menu = Menu.objects.all().order_by('-id')
         serializer = MenuSerializer(menu, many=True)
         return Response(message_error(True, 200, data=serializer.data), status.HTTP_200_OK)
+
+
+class CheckToken(viewsets.ViewSet):
+
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(type=openapi.TYPE_OBJECT,
+                                    properties={
+                                        'Token': openapi.Schema(type=openapi.TYPE_STRING)
+                                    })
+    )
+    @action(methods=['post'], detail=False, url_path='check')
+    def check_token(self, request):
+        data = request.data
+        serializer = CheckTokenSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(message_error(False, 400, error_code=208), status.HTTP_400_BAD_REQUEST)
+
+        token = data.get('Token')
+        try:
+            decode_token = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            return Response(message_error(True, 200, data=True), status.HTTP_200_OK)
+        except jwt.ExpiredSignatureError:
+            return Response(message_error(False, 200, data=False), status.HTTP_200_OK)
+        except jwt.InvalidTokenError:
+            return Response(message_error(False, 200, data=False), status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path='callback')
+    def call_back(self, request):
+        url = "https://pay.sharif.edu/api/API"
+        data = {
+            "Gateway": "Edari",
+            "Function": "Request",
+            "TerminalID": 160072,
+            "Username": "Takmili",
+            "Password": "BT@kmili6616!@",
+            "CallbackURL": "http://localhost:8000/token/call/",
+            "ID2": "185",
+            "NC": "0550229183",
+            "Name": "sffep",
+            "Family": "fffff",
+            "Tel": "46337840",
+            "Mobile": "09184311056",
+            "EMail": "se@gmail.com",
+            "Amount": 50000
+        }
+        json_data = json.dumps(data)
+        payload = 'INPUT=' + urllib.parse.quote(str(json_data))
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+
+        response = requests.post(url, data=payload, headers=headers)
+        if response.json().get('Result') == 0:
+            url = f"https://pay.sharif.edu/submit/Edari/{response.json().get('OrderID')}"
+            webbrowser.open(url)
+        return Response(message_error(True, 200, data=True), status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path='call/(?P<param>[^/.]+)')
+    def call_ba(self, request, param):
+        decode = urllib.parse.unquote(param)
+        return Response(message_error(True, 200, data=True), status.HTTP_200_OK)
 
 
 

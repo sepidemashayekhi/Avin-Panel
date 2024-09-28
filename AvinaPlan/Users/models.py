@@ -14,7 +14,7 @@ class User(models.Model):
     class UserManager(models.Manager):
 
         def create_user(self, NationalCode, PhoneNumber, FullName):
-            if self.filter(NationalCode=NationalCode).first():
+            if self.filter(NationalCode=NationalCode).first() or self.filter(PhoneNumber=PhoneNumber).first():
                return False
             user = self.model(NationalCode=NationalCode, FullName=FullName, PhoneNumber=PhoneNumber, Active=False)
             user.save()
@@ -154,8 +154,9 @@ class MyTOTPDevice(models.Model):
             verified = totp.verify(token, self.tolerance, self.last_t + 1)
             if not verified:
                 verified = False
-            self.tolerance = self.tolerance+1
-            self.save()
+            if verified == True:
+                self.tolerance = self.tolerance+1
+                self.save()
         return verified
 
 

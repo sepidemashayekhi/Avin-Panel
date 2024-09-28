@@ -1,13 +1,18 @@
+import os
+
 from django.utils.deprecation import MiddlewareMixin
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponse
 import jwt
 from Users.models import User, UserAccess
-JWT_SECRET = 'secret'
+from dotenv import load_dotenv
+
+load_dotenv()
+JWT_SECRET = os.getenv('SECRET_KEY')
 from django.urls import resolve
 
 WITHOUTLICENS = ['index', 'schema-swagger-ui', 'user-create-user', 'user-login-user', 'user-set-newpass', 'user-set-pass',
-                 'user-recover-pass'
+                 'user-recover-pass','token-check-token','token-call-back','token-call-ba'
                  ]
 
 USERPORTAL = [
@@ -45,7 +50,7 @@ class CustomMiddleware(MiddlewareMixin):
             if auth_header and auth_header.startswith('Bearer '):
                 token_key = auth_header.split(' ')[1]
                 try:
-                    decode = jwt.decode(token_key, algorithms='HS256', key=JWT_SECRET)
+                    decode = jwt.decode(token_key, algorithms=['HS256'], key=JWT_SECRET)
                 except:
                     return HttpResponse('not access', status=401)
                 licens = get_licensed_menus(request ,decode['UserId'], current_route)

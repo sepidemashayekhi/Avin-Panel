@@ -23,12 +23,16 @@ error_list = {
     213: persian.convert_ar_characters('کلید ارسالی معتبر نیست '),
     214: persian.convert_ar_characters('کد اعتبار سنجی ارسال شده معتبر نمی باشد'),
     215: persian.convert_ar_characters('محصول به این شناسه وجود ندارد'),
-    216: persian.convert_ar_characters('کاربر با این کد ملی قبلا ثبت نام کرده است'),
+    216: persian.convert_ar_characters('کاربر با این کد ملی یا شماره همراه  قبلا ثبت نام کرده است'),
     217: persian.convert_ar_characters('کاربر ایجاد و در انتطار تایید مدیر می باشد'),
     218: persian.convert_ar_characters('کد ملی یا رمز عبور اشتباه می باشد'),
     219: persian.convert_ar_characters('ارسال پیامک با خطا مواجه شد لطفا مجددا تلاش کنید'),
     220: persian.convert_ar_characters('کد اعتبارسنجی معتبر نیست '),
     221: persian.convert_ar_characters('کاربر غیر فعال با این شناسه وجود ندارد'),
     222: persian.convert_ar_characters('ارسال لینک به کابر با خطا مواجه شد'),
+    223: persian.convert_ar_characters('توکن منتقضی شده است.'),
+    224: persian.convert_ar_characters('توکن نامعتبر است.'),
+    225: persian.convert_ar_characters('محصول با این شناسه وجود ندارد'),
+    226: persian.convert_ar_characters('دسته بندی با این شناسه وجود ندارد.')
 
 }
